@@ -15,23 +15,26 @@ LABEL maintainer="CrazyMax" \
   org.label-schema.vendor="CrazyMax" \
   org.label-schema.schema-version="1.0"
 
-RUN apk add --update --no-cache \
-    rrdtool-cached \
-    shadow \
-  && rm -rf /tmp/* /var/cache/apk/*
+ARG RRDCACHED_VERSION="1.7.0-r0"
+ARG RRDCACHED_UID="1000"
+ARG RDDCACHED_GID="1000"
 
-ADD entrypoint.sh /entrypoint.sh
-ADD assets/ /
+RUN set -x \
+    \
+    && addgroup -g ${RDDCACHED_GID} rrdcached \
+    && adduser -u ${RRDCACHED_UID} -G rrdcached -s /sbin/nologin -D -H rrdcached
 
-RUN mkdir -p /data \
-  && chmod a+x /entrypoint.sh /usr/local/bin/* \
-  && addgroup -g 1000 rrdcached \
-  && adduser -u 1000 -G rrdcached -h /data -s /sbin/nologin -D rrdcached \
-  && chown -R rrdcached. /data
+RUN set -x \
+    \
+    && apk add --no-cache \
+        rrdtool-cached=${RRDCACHED_VERSION}
 
-EXPOSE 42217
-WORKDIR "/data"
-VOLUME [ "/data" ]
+COPY entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 42217/udp
+
+VOLUME [ "/var/lib/rrdcached/journal", "/var/lib/rrdcached/db", "/run/rrdcached" ]
 
 ENTRYPOINT [ "/entrypoint.sh" ]
-CMD [ "/usr/local/bin/rrdcached" ]

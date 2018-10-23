@@ -2,23 +2,26 @@ version: "3.2"
 
 services:
   rrdcached:
-    image: crazymax/rrdcached
+    image: kadock/rrdcached
     container_name: rrdcached
     ports:
       - target: 42217
         published: 42217
-        protocol: tcp
+        protocol: udp
     volumes:
-      - "rrdcached:/data"
+      - "rrdcached_db:/var/lib/rrdcached/db/"
+      - "rrdcached_journal:/var/lib/rrdcached/journal/"
+      - "rrdcached_sock:/run/rrdcached/"
+      - "/etc/localtime:/etc/localtime:ro"
     environment:
-      - "TZ=Europe/Paris"
-      - "PUID=1000"
-      - "PGID=1000"
-      - "LOG_LEVEL=LOG_INFO"
-      - "WRITE_TIMEOUT=300"
-      - "WRITE_THREADS=4"
-      - "FLUSH_DEAD_DATA_INTERVAL=3600"
+      - "TZ=Europe/Copenhagen"
+      - "RRDCACHED_LOGLEVEL=LOG_INFO"
+      - "RRDCACHED_WRITE_TIMEOUT=300"
+      - "RRDCACHED_THREADS=4"
+      - "RRDCACHED_FLUSH_TIMEOUT=3600"
     restart: always
 
 volumes:
-  rrdcached:
+  rrdcached_db:
+  rrdcached_journal:
+  rrdcached_sock:
